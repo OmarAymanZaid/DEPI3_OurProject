@@ -1,153 +1,267 @@
-# ==========================================
-# 🩺 Healthcare Predictive Analytics Dashboard
-# ==========================================
 import streamlit as st
 import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
+import plotly.express as px
 
-# ---------------------------
-# PAGE SETUP
-# ---------------------------
+# ---------------------------------------------------------
+# PAGE CONFIG
+# ---------------------------------------------------------
 st.set_page_config(
-    page_title="Healthcare Predictive Analytics",
-    page_icon="🏥",
+    page_title="Stroke Health Analytics",
     layout="wide",
-    initial_sidebar_state="expanded"
+    page_icon="🧠"
 )
 
-# Custom style
-st.markdown("""
-    <style>
-    .block-container { padding-top: 1rem; }
-    h2 { color: #2E8B57; }
-    </style>
-""", unsafe_allow_html=True)
+st.title("🧠 Stroke Health Predictive Analytics Dashboard")
+st.write("An interactive dashboard that visualizes stroke risk factors across 10 major health dimensions.")
 
-# ---------------------------
-# LOAD DATA
-# ---------------------------
-@st.cache_data
-def load_data():
-    df = pd.read_csv("Data/stroke_data_cleaned.csv")
-    return df
+# Load your dataset
+stroke_data = pd.read_csv("D:\DEPI\Healthcare_Predictive_Analytics\Data\stroke_data_cleaned.csv")  # Example
 
-stroke_data = load_data()
 
-# ---------------------------
-# HEADER
-# ---------------------------
-st.title("🏥 Healthcare Predictive Analytics: Stroke Dataset")
-st.markdown("""
-This interactive dashboard presents insights from the **Stroke Prediction Dataset**.
-Each section explores an analytical question through statistical reasoning and visual evidence.
-Use this tool to explore how demographic and health-related factors correlate with stroke occurrence.
-""")
+# ---------------------------------------------------------
+# GLOBAL REUSABLE CHART FUNCTION
+# ---------------------------------------------------------
+def bar_chart(df, x, y, title, x_label, subtitle_labels=None):
+    df = df.copy()
+    df['label'] = df[y].map(lambda v: f"{v:.2f}%")
 
-st.divider()
+    if subtitle_labels is not None:
+        df['label'] = df.apply(lambda row:
+                               f"{row[y]:.2f}%<br>{subtitle_labels[row[x]]}", axis=1)
 
-# ---------------------------
-# DATA OVERVIEW
-# ---------------------------
-st.header("📊 Dataset Overview")
-st.markdown("Preview the cleaned dataset below:")
-st.dataframe(stroke_data.head())
+    fig = px.bar(
+        df,
+        x=x,
+        y=y,
+        text='label',
+        color=x,
+        title=title,
+        height=450,
+        template="plotly_white"
+    )
 
-st.markdown(f"**Total records:** {stroke_data.shape[0]} | **Columns:** {stroke_data.shape[1]}")
+    fig.update_traces(textposition="outside")
+    fig.update_layout(
+        xaxis_title=x_label,
+        yaxis_title="Stroke Rate (%)")
+    return fig
 
-st.divider()
 
-# ---------------------------
-# INTERACTIVE QUESTIONS
-# ---------------------------
+# ---------------------------------------------------------
+# SIDEBAR NAVIGATION
+# ---------------------------------------------------------
+menu = st.sidebar.radio(
+    "Navigation",
+    [
+        "🏠 Overview",
+        "📊 Analytics (1–5)",
+        "📈 Analytics (6–10)",
+        "🤖 Prediction Model"
+    ]
+)
 
-# --- Question 1 ---
-with st.expander("🧩 **Question 1: Do urban or rural residents experience more strokes?**", expanded=True):
-    st.markdown("""
-    **Why:** Lifestyle and healthcare accessibility may differ between urban and rural populations, potentially influencing stroke rates.
-    """)
-    
-    stroke_rate = stroke_data.groupby('Residence_type')['stroke'].mean().reset_index()
-    stroke_rate['stroke'] *= 100
 
-    st.write("**Stroke rate by residence type (%):**")
-    st.dataframe(stroke_rate)
+# =========================================================
+#  SECTION 1: OVERVIEW + KPIs
+# =========================================================
+if menu == "🏠 Overview":
+    st.header("📌 Overview & Key Indicators")
 
-    fig, ax = plt.subplots(figsize=(6,4))
-    sns.barplot(data=stroke_rate, x='Residence_type', y='stroke', palette='crest', ax=ax)
-    ax.set_title('Stroke Rate by Residence Type')
-    ax.set_ylabel('Stroke Rate (%)')
-    ax.set_xlabel('Residence Type')
-    for i, row in stroke_rate.iterrows():
-        ax.text(i, row['stroke'] + 0.5, f"{row['stroke']:.2f}%", ha='center')
-    st.pyplot(fig)
+    col1, col2, col3 = st.columns(3)
 
-# --- Question 2 ---
-with st.expander("🧩 **Question 2: Does stroke risk rise with age?**"):
-    st.markdown("**Why:** Age is one of the most significant risk factors for stroke.")
-    fig, ax = plt.subplots(figsize=(7,4))
-    sns.boxplot(x='stroke', y='age', data=stroke_data, hue='stroke', palette='crest', legend=False, ax=ax)
-    ax.set_title("Age vs Stroke Occurrence")
-    ax.set_xlabel("Stroke (0 = No, 1 = Yes)")
-    ax.set_ylabel("Age")
-    st.pyplot(fig)
+    total_people = len(stroke_data)
+    total_strokes = stroke_data['stroke'].sum()
+    stroke_rate_total = (stroke_data['stroke'].mean() * 100)
 
-# --- Question 3 ---
-with st.expander("🧩 **Question 3: Is high glucose level linked to stroke?**"):
-    st.markdown("**Why:** Elevated glucose levels can indicate diabetes, which increases stroke risk.")
-    fig, ax = plt.subplots(figsize=(7,4))
-    sns.boxplot(x='stroke', y='avg_glucose_level', data=stroke_data, hue='stroke', palette='crest', legend=False, ax=ax)
-    ax.set_title("Average Glucose Level vs Stroke Occurrence")
-    ax.set_xlabel("Stroke (0 = No, 1 = Yes)")
-    ax.set_ylabel("Average Glucose Level")
-    st.pyplot(fig)
+    col1.metric("Total Records", f"{total_people:,}")
+    col2.metric("Total Stroke Cases", f"{int(total_strokes):,}")
+    col3.metric("Overall Stroke Rate", f"{stroke_rate_total:.2f}%")
 
-# --- Question 4 ---
-with st.expander("🧩 **Question 4: Does marital status influence stroke risk?**"):
-    st.markdown("**Why:** Marital status can influence lifestyle, stress levels, and healthcare engagement.")
-    stroke_rate = stroke_data.groupby('ever_married')['stroke'].mean().reset_index()
-    stroke_rate['stroke'] *= 100
+    st.write("Use the sidebar to navigate between sections.")
 
-    fig, ax = plt.subplots(figsize=(6,4))
-    sns.barplot(data=stroke_rate, x='ever_married', y='stroke', palette='crest', ax=ax)
-    ax.set_title("Stroke Rate by Marital Status")
-    ax.set_ylabel("Stroke Rate (%)")
-    ax.set_xlabel("Ever Married")
-    for i, row in stroke_rate.iterrows():
-        ax.text(i, row['stroke'] + 0.5, f"{row['stroke']:.2f}%", ha='center')
-    st.pyplot(fig)
 
-# --- Question 5 ---
-with st.expander("🧩 **Question 5: Does smoking increase stroke risk?**"):
-    st.markdown("**Why:** Smoking contributes to vascular damage and is a known cardiovascular risk factor.")
-    stroke_rate = stroke_data.groupby('smoking_status')['stroke'].mean().reset_index()
-    stroke_rate['stroke'] *= 100
+# =========================================================
+#  SECTION 2: ANALYTICS 1–5
+# =========================================================
+elif menu == "📊 Analytics (1–5)":
 
-    fig, ax = plt.subplots(figsize=(7,4))
-    sns.barplot(data=stroke_rate, x='smoking_status', y='stroke', palette='crest', ax=ax)
-    ax.set_title("Stroke Rate by Smoking Status")
-    ax.set_ylabel("Stroke Rate (%)")
-    ax.set_xlabel("Smoking Status")
-    plt.xticks(rotation=25)
-    st.pyplot(fig)
+    st.header("📊 Stroke Analysis — Part 1 (Questions 1–5)")
 
-# --- Add additional questions ---
-# You can easily extend this format up to Q10
-# Example placeholders below:
-with st.expander("🧩 **Question 6: Does work type correlate with stroke occurrence?**"):
-    st.markdown("**Why:** Occupational environment and stress may impact stroke risk.")
-    # Add your code here (similar to Q5)
-    st.info("Add visualization here...")
+    # 1. Residence Type
+    with st.expander("🏠 Stroke Rate by Residence Type", expanded=True):
+        df = stroke_data.groupby("Residence_type")["stroke"].mean().reset_index()
+        df["stroke"] *= 100
+        fig = bar_chart(df, "Residence_type", "stroke",
+                        "Stroke Rate by Residence Type", "Residence Type")
+        st.plotly_chart(fig, use_container_width=True)
 
-with st.expander("🧩 **Question 7: Does gender affect stroke likelihood?**"):
-    st.markdown("**Why:** Biological and hormonal differences may affect cardiovascular health.")
-    st.info("Add visualization here...")
+    # 2. Smoking Status
+    with st.expander("🚬 Stroke Rate by Smoking Status"):
+        df = stroke_data.groupby("smoking_status")["stroke"].mean().reset_index()
+        df["stroke"] *= 100
+        fig = bar_chart(df, "smoking_status", "stroke",
+                        "Stroke Rate by Smoking Status", "Smoking Status")
+        st.plotly_chart(fig, use_container_width=True)
 
-# --- Summary ---
-st.divider()
-st.header("📈 Summary")
-st.markdown("""
-This dashboard demonstrates exploratory findings from the **Stroke Prediction Dataset**.
-The visual analyses reveal potential relationships between demographic, lifestyle, and health factors that may contribute to stroke risk.
-Further preprocessing and machine learning modeling will be performed in **Milestone 2** to validate and quantify these relationships.
-""")
+    # 3. Work Type
+    with st.expander("💼 Stroke Rate by Work Type"):
+        df = stroke_data.groupby("work_type")["stroke"].mean().reset_index()
+        df["stroke"] *= 100
+        fig = bar_chart(df, "work_type", "stroke",
+                        "Stroke Rate by Work Type", "Work Type")
+        st.plotly_chart(fig, use_container_width=True)
+
+    # 4. Gender
+    with st.expander("👤 Stroke Rate by Gender"):
+        df = stroke_data.groupby("gender")["stroke"].mean().reset_index()
+        df["stroke"] *= 100
+        fig = bar_chart(df, "gender", "stroke",
+                        "Stroke Rate by Gender", "Gender")
+        st.plotly_chart(fig, use_container_width=True)
+
+    # 5. Hypertension
+    with st.expander("❤️ Stroke Rate by Hypertension"):
+        df = stroke_data.groupby("hypertension")["stroke"].mean().reset_index()
+        df["hypertension"] = df["hypertension"].map({0: "No Hypertension", 1: "Hypertension"})
+        df["stroke"] *= 100
+        fig = bar_chart(df, "hypertension", "stroke",
+                        "Stroke Rate by Hypertension", "Hypertension Status")
+        st.plotly_chart(fig, use_container_width=True)
+
+
+# =========================================================
+# SECTION 3: ANALYTICS 6–10
+# =========================================================
+elif menu == "📈 Analytics (6–10)":
+
+    st.header("📈 Stroke Analysis — Part 2 (Questions 6–10)")
+
+    # 6. Ever Married
+    with st.expander("💍 Stroke Rate by Marital Status", expanded=True):
+        df = stroke_data.groupby("ever_married")["stroke"].mean().reset_index()
+        df["stroke"] *= 100
+        fig = bar_chart(df, "ever_married", "stroke",
+                        "Stroke Rate by Marital Status", "Marital Status")
+        st.plotly_chart(fig, use_container_width=True)
+
+    # 7. BMI Group
+    with st.expander("⚖️ Stroke Rate by BMI Group"):
+
+        # --- Ensure BMI groups exist ---
+        if 'BMI_Group' not in stroke_data.columns:
+            stroke_data['BMI_Group'] = pd.cut(
+                stroke_data['bmi'],
+                bins=[-float('inf'), -0.5, 0.5, 1.5, float('inf')],
+                labels=['Underweight', 'Normal', 'Overweight', 'Obese']
+            )
+
+        # --- Map readable BMI ranges ---
+        bmi_ranges = {
+            'Underweight': '(<25.2 kg/m²)',
+            'Normal': '(25.2–32.3 kg/m²)',
+            'Overweight': '(32.3–39.4 kg/m²)',
+            'Obese': '(>39.4 kg/m²)'
+        }
+
+        # --- Group by BMI_Group and compute stroke rate ---
+        df = stroke_data.groupby('BMI_Group')['stroke'].mean().reset_index()
+        df['stroke'] *= 100
+
+        # --- Create interactive bar chart ---
+        fig = bar_chart(
+            df,
+            x='BMI_Group',
+            y='stroke',
+            title='Stroke Rate by BMI Group',
+            x_label='BMI Group',
+            subtitle_labels=bmi_ranges
+        )
+
+        st.plotly_chart(fig, use_container_width=True)
+
+
+
+    # 8. Heart Disease
+    with st.expander("❤️ Stroke Rate by Heart Disease"):
+        df = stroke_data.groupby("heart_disease")["stroke"].mean().reset_index()
+        df["heart_disease"] = df["heart_disease"].map({0: "No Heart Disease", 1: "Heart Disease"})
+        df["stroke"] *= 100
+        fig = bar_chart(df, "heart_disease", "stroke",
+                        "Stroke Rate by Heart Disease", "Heart Disease Status")
+        st.plotly_chart(fig, use_container_width=True)
+
+    # 9. Glucose Level
+    with st.expander("🩸 Stroke Rate by Glucose Level"):
+
+        if 'Glucose_Level_Group' not in stroke_data.columns:
+            stroke_data["Glucose_Level_Group"] = pd.cut(
+                stroke_data["avg_glucose_level"],
+                bins=[0, 90, 140, float("inf")],
+                labels=["Low", "Normal", "High"]
+            )
+
+        glucose_ranges = {
+            "Low": "<85 mg/dL",
+            "Normal": "85–125 mg/dL",
+            "High": ">125 mg/dL"
+        }
+
+        df = stroke_data.groupby("Glucose_Level_Group")["stroke"].mean().reset_index()
+        df["stroke"] *= 100
+
+        fig = bar_chart(
+            df,
+            "Glucose_Level_Group",
+            "stroke",
+            "Stroke Rate by Glucose Level",
+            "Glucose Level",
+            subtitle_labels=glucose_ranges
+        )
+        st.plotly_chart(fig, use_container_width=True)
+
+    # 10. Age Group
+    with st.expander("👵 Stroke Rate by Age Group"):
+        # Create Age_Group if it doesn't exist
+        if 'Age_Group' not in stroke_data.columns:
+            stroke_data['Age_Group'] = pd.cut(
+                stroke_data['age'],
+                bins=[0, 32, 55, float('inf')],
+                labels=['Younger', 'Middle-aged', 'Older']
+            )
+
+        age_ranges = {
+            "Younger": "<32 yrs",
+            "Middle-aged": "32–55 yrs",
+            "Older": ">55 yrs"
+        }
+
+        df = stroke_data.groupby("Age_Group")["stroke"].mean().reset_index()
+        df["stroke"] *= 100
+
+        fig = bar_chart(
+            df,
+            "Age_Group",
+            "stroke",
+            "Stroke Rate by Age Group",
+            "Age Group",
+            subtitle_labels=age_ranges
+        )
+        st.plotly_chart(fig, use_container_width=True)
+
+
+# =========================================================
+#  SECTION 4: PREDICTION MODEL PAGE
+# =========================================================
+elif menu == "🤖 Prediction Model":
+
+    st.header("🤖 Stroke Prediction Model")
+
+    st.info("This section will include a machine learning model that predicts stroke risk.")
+
+    st.write("✔ Feature scaling (age, glucose, BMI)")  
+    st.write("✔ Logistic Regression / Random Forest")  
+    st.write("✔ Real-time prediction UI")  
+    st.write("✔ Probability output + explanation")  
+
+    st.warning("I can build the entire ML model for you — just upload your dataset or tell me the model you want.")
+
