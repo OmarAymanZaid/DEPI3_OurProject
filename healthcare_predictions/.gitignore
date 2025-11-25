@@ -1,1 +1,8 @@
 *.txt
+*__pycache__
+*.pyc
+*.pyo
+*.pyo
+*.pyd
+
+.vscode/

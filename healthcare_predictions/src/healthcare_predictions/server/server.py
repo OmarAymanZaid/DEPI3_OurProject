@@ -3,34 +3,22 @@ from pydantic import BaseModel
 import pandas as pd
 import joblib
 
+from healthcare_predictions.server.config import MODEL_PATH, PREPROCESSOR_PATH
+from healthcare_predictions.serverTypes.server_types import Patient
+
+
 # -------------------------
 # Load model and preprocessor
 # -------------------------
-model_path = "/home/omar/DEPI3_OurProject/healthcare_predictions/Models/Logistic_Regression_Tuned.pkl"
-preprocessor_path = "/home/omar/DEPI3_OurProject/healthcare_predictions/Models/preprocessor.pkl"
 
-model = joblib.load(model_path)
-preprocessor = joblib.load(preprocessor_path)  # This should be your fitted ColumnTransformer or Pipeline
+model = joblib.load(MODEL_PATH)
+preprocessor = joblib.load(PREPROCESSOR_PATH)
 
 # -------------------------
 # Initialize FastAPI
 # -------------------------
 app = FastAPI()
-
-# -------------------------
-# Input data model
-# -------------------------
-class Patient(BaseModel):
-    gender: str
-    age: float
-    hypertension: int
-    heart_disease: int
-    ever_married: str       
-    work_type: str          
-    Residence_type: str     
-    avg_glucose_level: float
-    bmi: float
-    smoking_status: str     
+   
 
 # -------------------------
 # Numeric and categorical columns
