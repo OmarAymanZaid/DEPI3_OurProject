@@ -252,16 +252,14 @@ elif menu == "📈 Analytics (6–10)":
 # =========================================================
 #  SECTION 4: PREDICTION MODEL PAGE
 # =========================================================
-elif menu == "🤖 Prediction Model":
+# elif menu == "🤖 Prediction Model":
 
-    st.header("🤖 Stroke Prediction Model")
+#     st.header("🤖 Stroke Prediction Model")
 
-    st.info("This section will include a machine learning model that predicts stroke risk.")
+#     st.info("This section will include a machine learning model that predicts stroke risk.")
 
-    st.write("✔ Feature scaling (age, glucose, BMI)")  
-    st.write("✔ Logistic Regression / Random Forest")  
-    st.write("✔ Real-time prediction UI")  
-    st.write("✔ Probability output + explanation")  
-
-    st.warning("I can build the entire ML model for you — just upload your dataset or tell me the model you want.")
+#     st.write("✔ Feature scaling (age, glucose, BMI)")  
+#     st.write("✔ Logistic Regression / Random Forest")  
+#     st.write("✔ Real-time prediction UI")  
+#     st.write("✔ Probability output + explanation")  
 
