@@ -21,21 +21,22 @@ app = FastAPI()
 # Input data model
 # -------------------------
 class Patient(BaseModel):
+    gender: str
     age: float
     hypertension: int
     heart_disease: int
-    ever_married: str       # strings: "Yes" / "No"
-    work_type: str          # "Private", "Self-employed", etc.
-    residence_type: str     # "Urban" / "Rural"
+    ever_married: str       
+    work_type: str          
+    Residence_type: str     
     avg_glucose_level: float
     bmi: float
-    smoking_status: str     # "never smoked", "smokes", etc.
+    smoking_status: str     
 
 # -------------------------
 # Numeric and categorical columns
 # -------------------------
 numeric_cols = ['age', 'hypertension', 'heart_disease', 'avg_glucose_level', 'bmi']
-categorical_cols = ["work_type", "ever_married", "residence_type", "smoking_status"]
+categorical_cols = ["gender", "work_type", "ever_married", "Residence_type", "smoking_status"]
 
 # -------------------------
 # Root endpoint
