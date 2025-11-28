@@ -29,9 +29,9 @@ DATA_PATH = os.path.join(BASE_DIR, "..", "..", "..", "Data", "stroke_data_cleane
 stroke_data = pd.read_csv(DATA_PATH)
 
 
-# ---------------------------------------------------------
+# --------------------------------------------------------
 # GLOBAL REUSABLE CHART FUNCTION
-# ---------------------------------------------------------
+# --------------------------------------------------------
 def bar_chart(df, x, y, title, x_label, subtitle_labels=None):
     df = df.copy()
     df['label'] = df[y].map(lambda v: f"{v:.2f}%")
