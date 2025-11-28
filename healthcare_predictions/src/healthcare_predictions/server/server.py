@@ -50,6 +50,7 @@ def predict(patient: Patient):
     prediction = model.predict(df_model_input)[0]
     probability = model.predict_proba(df_model_input)[0][1]
 
+
     # Debug logs (optional)
     print("Model input:\n", df_model_input)
     print("Prediction:", prediction, "Probability:", probability)

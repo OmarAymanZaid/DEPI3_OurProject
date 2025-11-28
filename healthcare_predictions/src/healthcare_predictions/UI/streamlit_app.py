@@ -1,6 +1,12 @@
+import os
+import joblib
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import numpy as np
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.compose import ColumnTransformer
+
 
 # ---------------------------------------------------------
 # PAGE CONFIG
@@ -15,7 +21,12 @@ st.title("🧠 Stroke Health Predictive Analytics Dashboard")
 st.write("An interactive dashboard that visualizes stroke risk factors across 10 major health dimensions.")
 
 # Load your dataset
-stroke_data = pd.read_csv("D:\DEPI\Healthcare_Predictive_Analytics\Data\stroke_data_cleaned.csv")  # Example
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+DATA_PATH = os.path.join(BASE_DIR, "..", "..", "..", "Data", "stroke_data_cleaned.csv")
+
+# Read the CSV
+stroke_data = pd.read_csv(DATA_PATH)
 
 
 # ---------------------------------------------------------
@@ -250,16 +261,121 @@ elif menu == "📈 Analytics (6–10)":
 
 
 # =========================================================
-#  SECTION 4: PREDICTION MODEL PAGE
+#  SECTION 4: PREDICTION MODEL PAGE (LOCAL PREPROCESSING)
 # =========================================================
-# elif menu == "🤖 Prediction Model":
+elif menu == "🤖 Prediction Model":
 
-#     st.header("🤖 Stroke Prediction Model")
+    st.header("🤖 Stroke Risk Prediction")
 
-#     st.info("This section will include a machine learning model that predicts stroke risk.")
+    st.write("Enter patient information below to get a predicted probability of stroke using the trained machine learning model.")
 
-#     st.write("✔ Feature scaling (age, glucose, BMI)")  
-#     st.write("✔ Logistic Regression / Random Forest")  
-#     st.write("✔ Real-time prediction UI")  
-#     st.write("✔ Probability output + explanation")  
+    # ----------------------------------------
+    # FORM INPUTS
+    # ----------------------------------------
+    with st.form("prediction_form"):
+        col1, col2 = st.columns(2)
+
+        with col1:
+            gender = st.selectbox("Gender", ["Male", "Female", "Other"])
+            age = st.number_input("Age", min_value=1, max_value=120, value=45)
+            hypertension = st.selectbox("Hypertension", ["No", "Yes"])
+            heart_disease = st.selectbox("Heart Disease", ["No", "Yes"])
+            ever_married = st.selectbox("Ever Married", ["No", "Yes"])
+
+        with col2:
+            work_type = st.selectbox(
+                "Work Type",
+                ["Private", "Self-employed", "Govt_job", "Children", "Never_worked"]
+            )
+            Residence_type = st.selectbox("Residence Type", ["Urban", "Rural"])
+            avg_glucose_level = st.number_input("Avg Glucose Level", 40.0, 300.0, 105.0)
+            bmi = st.number_input("BMI", 10.0, 60.0, 28.5)
+            smoking_status = st.selectbox(
+                "Smoking Status",
+                ["formerly smoked", "never smoked", "smokes", "Unknown"]
+            )
+
+        submitted = st.form_submit_button("Predict Stroke Risk")
+
+    # ----------------------------------------
+    # ON SUBMIT: LOCAL PREPROCESSING + PREDICTION
+    # ----------------------------------------
+    if submitted:
+
+        # -----------------------------
+        # Load model only
+        # -----------------------------
+        model = joblib.load("/home/omar/DEPI3_OurProject/healthcare_predictions/Models/Logistic_Regression_Tuned.pkl")  # Replace with your model path
+
+        # -----------------------------
+        # Numeric columns and scaling parameters
+        # -----------------------------
+        numeric_cols = ['age', 'hypertension', 'heart_disease', 'avg_glucose_level', 'bmi']
+        numeric_values = np.array([
+            age,
+            1 if hypertension == "Yes" else 0,
+            1 if heart_disease == "Yes" else 0,
+            avg_glucose_level,
+            bmi
+        ]).reshape(1, -1)
+
+        # Example scaling parameters (replace with your training mean/std)
+        numeric_mean = np.array([45.0, 0.1, 0.05, 105.0, 28.0])
+        numeric_std = np.array([18.0, 0.3, 0.2, 45.0, 5.5])
+        numeric_scaled = (numeric_values - numeric_mean) / numeric_std
+
+        # -----------------------------
+        # Categorical columns and one-hot encoding
+        # -----------------------------
+        categorical_cols = ["gender", "work_type", "ever_married", "Residence_type", "smoking_status"]
+
+        categories = {
+            "gender": ["Male", "Female", "Other"],
+            "work_type": ["Private", "Self-employed", "Govt_job", "Children", "Never_worked"],
+            "ever_married": ["No", "Yes"],
+            "Residence_type": ["Urban", "Rural"],
+            "smoking_status": ["formerly smoked", "never smoked", "smokes", "Unknown"]
+        }
+
+        # Collect all categorical inputs in a dict
+        input_dict = {
+            "gender": gender,
+            "work_type": work_type,
+            "ever_married": ever_married,
+            "Residence_type": Residence_type,
+            "smoking_status": smoking_status
+        }
+
+        cat_array = []
+        for col in categorical_cols:
+            arr = [1 if input_dict[col] == cat else 0 for cat in categories[col]]
+            cat_array.extend(arr)
+        cat_array = np.array(cat_array).reshape(1, -1)
+
+        # -----------------------------
+        # Combine numeric + categorical
+        # -----------------------------
+        X_input = np.hstack([numeric_scaled, cat_array])
+
+        # -----------------------------
+        # Predict
+        # -----------------------------
+        prediction = model.predict(X_input)[0]
+        probability = model.predict_proba(X_input)[0][1]
+
+        # -----------------------------
+        # Display results
+        # -----------------------------
+        st.subheader("📊 Prediction Result")
+        st.success(f"Estimated Stroke Probability: **{probability*100:.2f}%**")
+
+        if probability < 0.10:
+            st.info("🟢 *Low Risk*: Continue maintaining healthy habits.")
+        elif probability < 0.30:
+            st.warning("🟡 *Moderate Risk*: Consider routine medical checkups.")
+        else:
+            st.error("🔴 *High Risk*: Consult a healthcare professional promptly.")
+
+
+
 
