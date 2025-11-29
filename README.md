@@ -4,6 +4,9 @@ This project develops a complete end-to-end machine learning pipeline to predict
 
 It includes data preprocessing, exploratory analysis, model development with class balancing, evaluation, and a full deployment setup using **FastAPI** and **Docker**.
 
+![Dashboard](https://drive.google.com/file/d/1d6xbUulOffhVhFkmtXv6B5T2s92ilO4e/view?usp=sharing)
+![Model Interface](https://drive.google.com/file/d/1n5kwVPBWU_mFtl3E7GX2ZL7sCqxAmQDs/view?usp=drive_link)
+
 **Dataset Source:** [Stroke Prediction Dataset (Kaggle)](https://www.kaggle.com/datasets/fedesoriano/stroke-prediction-dataset)
 
 **Documentation:** [Reports and Presentation](https://drive.google.com/drive/folders/1wZMJ2eGYaO-pen2NjA-mmrJ3Oz3z3ODy?usp=sharing)
