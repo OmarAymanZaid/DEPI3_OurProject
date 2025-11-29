@@ -10,6 +10,9 @@ It includes data preprocessing, exploratory analysis, model development with cla
 **2. Model Interface**
 ![Model Interface](https://drive.google.com/uc?export=view&id=1n5kwVPBWU_mFtl3E7GX2ZL7sCqxAmQDs)
 
+**3. Analysis**
+![Analysis](https://drive.google.com/uc?export=view&id=1bRF4DLty-2BIHQCBjyoOwpc4wr2Zy78y)
+
 **Dataset Source:** [Stroke Prediction Dataset (Kaggle)](https://www.kaggle.com/datasets/fedesoriano/stroke-prediction-dataset)
 
 **Documentation:** [Reports and Presentation](https://drive.google.com/drive/folders/1wZMJ2eGYaO-pen2NjA-mmrJ3Oz3z3ODy?usp=sharing)
